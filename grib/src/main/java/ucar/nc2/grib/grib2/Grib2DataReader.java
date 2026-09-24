@@ -1130,7 +1130,7 @@ public class Grib2DataReader {
       float R = gdrs.referenceValue;
       int E = gdrs.binaryScaleFactor;
       float EE = (float) Math.pow(2.0, (double) E);
-      data = new float[decodedData.length];
+      data = new float[totalNPoints];
       if (bitmap == null) {
         for (int i = 0; i < totalNPoints; i++) {
           data[i] = (R + getNextLong(bb, nbytesPerSample) * EE) / DD;
