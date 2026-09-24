@@ -75,6 +75,17 @@ public class TestGrib2DataReaderCcsds {
     assertThat(read(values, null, 16)).isEqualTo(expected);
   }
 
+  @Test
+  public void decodedValuesRemainIndependentAfterOtherReads() throws IOException {
+    long[] values = {0, 1, 2, 3, 10, 20, 30, (1L << bits) - 1};
+    float[] first = read(values, null, 0);
+    for (int i = 0; i < 16; i++) {
+      float[] next = read(new long[] {0, 1, 2, 10, 20, (1L << bits) - 1}, new byte[] {(byte) 0b10110111}, 0);
+      Arrays.fill(next, Float.NaN);
+    }
+    assertThat(first).isEqualTo(scaled(values));
+  }
+
   private float[] read(long[] values, byte[] bitmap, int scanMode) throws IOException {
     byte[] encoded = bitmap == null ? fullGrid : withBitmap;
     int bitmapLength = 6 + (bitmap == null ? 0 : bitmap.length);
