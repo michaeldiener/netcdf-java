@@ -1089,8 +1089,7 @@ public class Grib2DataReader {
 
     // read CCSDS encoded stream from message
     int encodedLength = dataLength - 5;
-    byte[] inputData = new byte[encodedLength];
-    raf.readFully(inputData);
+    byte[] inputData = new byte[Math.min(encodedLength, 64 * 1024)];
 
     float[] data;
     if (encodedLength > 0) {
@@ -1103,8 +1102,13 @@ public class Grib2DataReader {
         AecStream aecStreamDecode = AecStream.create(gdrs.numberOfBits, gdrs.blockSize, gdrs.referenceSampleInterval,
             gdrs.compressionOptionsMask);
 
-        // load data from grib message into memory
-        inputMemory.write(0, inputData, 0, inputData.length);
+        // Fill native input memory with bounded Java scratch storage.
+        for (int offset = 0; offset < encodedLength;) {
+          int count = Math.min(inputData.length, encodedLength - offset);
+          raf.readFully(inputData, 0, count);
+          inputMemory.write(offset, inputData, 0, count);
+          offset += count;
+        }
 
         aecStreamDecode.setInputMemory(inputMemory);
         aecStreamDecode.setOutputMemory(outputMemory);
